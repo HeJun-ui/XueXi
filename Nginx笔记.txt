@@ -1,0 +1,59 @@
+nginx学习笔记
+
+何俊 2021.4.19
+
+正向代理：正向代理相当于一个跳板机，比如客户端访问不了谷歌(需要翻墙)，使用VPN作为代理服务器，代理   vpn请求通过发送给谷歌，这样就解决了。服务端并不知道客户端的存在。
+
+反向代理：就是说客户端访问代理服务器，然后代理服务器把请求转发给不同的服务器节点去处理请求，客户端  不知道具体后面访问了哪台服务器，反向代理对用户则是不可知的，比如我们访问百度网站，百度的代理服务器对  外的域名为 https://www.baidu.com 。具体内部的服务器节点我们不知道，现实中我们通过访问百度的代理服务  器后，代理服务器给我们转发请求到他们N多的服务器节点中的一个给我们进行搜索后将结果返回。
+
+/etc/nginx/nginx.conf       Nginx配置文件
+
+反向代理设置：
+
+在http里面添加server
+
+server{
+  listen 80；   监听的端口
+  server_name  localhost; 监听的ip
+        
+    location / {                   根据请求匹配 这里是/ 默认是本机ip
+     #root 这里是写返回      root 设置nginx查找的路径
+     #index test.html          index 默认显示的页面，这里是test.html，nginx会在root设置的路径下面找index设置的文件
+     proxy_pass http://www.baidu.com           转发请求到xxx :这里是通过反向代理转发到百度
+   }
+
+}
+
+负载均衡策略配置:轮询和权重
+默认采用轮询策略，把请求按顺序分配到不同的server如果server挂掉，能自动突出
+upstream test {
+least_conn;             least_conn：分配到连接数最少的server上
+server   xxx;
+server   xxx;
+
+}
+
+权重：
+使用weight来指定server的访问机率，weight默认是1
+
+upstream test {
+
+server   127.0.0.1:8080  weight=1;   #server1
+server   127.0.0.1:8081  weight=2;   #server2        分配的机率是1的两倍
+
+}
+
+ip_hash:
+
+upstream  fengzp.com {           每个请求会按照访问ip的hash值来分配，分配连续请求比较频繁请求的web请求                                                  被分配到同一个server来处理，如果这个server挂掉能自动剔除
+    ip_hash;
+    server   ip:端口号; 
+    server   ip:端口号;  
+}
+
+ 
+
+
+
+
+

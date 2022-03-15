@@ -1,0 +1,27 @@
+连接指定ssid脚本
+#!/bin/bash
+
+if [ "$(whoami)" != "root" ]; then
+echo This operation requires root access.
+exit 1
+fi
+
+# Get "Wi-Fi" or "Airport" based on your OS
+wservice=`/usr/sbin/networksetup -listallnetworkservices | grep -Ei '(Wi-Fi|AirPort)'`
+
+# Get port (usually en1)
+wifiport=`/usr/sbin/networksetup -listallhardwareports | grep -A1 Wi-Fi | tail -n1 | cut -d" " -f2`
+
+currSSID=$(/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -I | grep ' SSID')
+currSSID=${currSSID:17}
+
+echo Current SSID: [${currSSID}]
+if [ "$currSSID" != "" ]; 
+then
+if [[ "$currSSID" != "JAMF Software 5GHz" && "$currSSID" != "Adams and the Ant" ]]; then
+echo Taking out [${currSSID}] on ${wifiport}
+networksetup -setairportpower ${wifiport} off
+networksetup -removepreferredwirelessnetwork ${wifiport} ${currSSID}
+networksetup -setairportpower ${wifiport} on
+fi
+fi
